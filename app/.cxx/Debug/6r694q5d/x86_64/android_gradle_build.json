@@ -1,0 +1,42 @@
+{
+  "stringTable": {},
+  "buildFiles": [
+    "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/nishchaljagadeesha/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+      "-C",
+      "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/6r694q5d/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/nishchaljagadeesha/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+    "-C",
+    "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/6r694q5d/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "faiss-Debug-x86_64": {
+      "buildCommandComponents": [
+        "/Users/nishchaljagadeesha/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/6r694q5d/x86_64",
+        "faiss"
+      ],
+      "buildType": "debug",
+      "abi": "x86_64",
+      "artifactName": "faiss",
+      "output": "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/build/intermediates/cxx/Debug/6r694q5d/obj/x86_64/libfaiss.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {},
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

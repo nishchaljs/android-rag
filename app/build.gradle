@@ -1,14 +1,16 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
-    compileSdkVersion 28
+    compileSdk 34
     defaultConfig {
         applicationId "io.datamachines.faiss"
-        minSdkVersion 16
+        minSdkVersion 26
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11 -fopenmp"
@@ -17,14 +19,15 @@ android {
             }
         }
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', "x86", "x86_64"
+            abiFilters 'arm64-v8a' // Preferred for stability
+            // 'armeabi-v7a', 'x86', 'x86_64' optional but less stable
             //32-bit(armeabi-v7a) is not recommended; errors occur when the dataset is large
         }
 
     }
     sourceSets {
         main {
-            jniLibs.srcDirs = ['libs']
+            jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
     buildTypes {
@@ -43,6 +46,9 @@ android {
             abortOnError false
         }
     }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 
 }
 repositories {
@@ -60,10 +66,51 @@ makejni.dependsOn(build)
 
 
 dependencies {
+    implementation 'androidx.multidex:multidex:2.0.1'
+    //implementation "androidx.appcompat:appcompat:1.7.0"
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "androidx.appcompat:appcompat-resources:1.6.1"
+    implementation "androidx.core:core-ktx:1.9.0"
+
+    implementation "androidx.lifecycle:lifecycle-runtime:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-common:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-process:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-livedata:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-livedata-core:2.6.2"
+
+
+    //implementation "androidx.core:core-ktx:1.13.1"
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    //implementation 'com.android.support:appcompat-v7:28.0.0'
+    //implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.13.2'
+    //androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    //androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test:core:1.6.1'
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.15.1")
+    implementation ("com.github.shubham0204:Sentence-Embeddings-Android:0.0.5"){
+        exclude group: "androidx.appcompat", module: "appcompat"
+        exclude group: "androidx.appcompat", module: "appcompat-resources"
+        exclude group: "androidx.lifecycle"
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force "androidx.appcompat:appcompat:1.6.1"
+            force "androidx.appcompat:appcompat-resources:1.6.1"
+            force "androidx.activity:activity:1.6.1"
+            force "androidx.fragment:fragment:1.5.5"
+            force "androidx.lifecycle:lifecycle-runtime:2.6.2"
+            force "androidx.lifecycle:lifecycle-viewmodel:2.6.2"
+            force "androidx.lifecycle:lifecycle-livedata-core:2.6.2"
+            force "androidx.lifecycle:lifecycle-livedata:2.6.2"
+            force "androidx.lifecycle:lifecycle-process:2.6.2"
+            force "androidx.lifecycle:lifecycle-common:2.6.2"
+        }
+    }
+
 }

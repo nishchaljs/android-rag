@@ -1,0 +1,42 @@
+{
+  "stringTable": {},
+  "buildFiles": [
+    "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/nishchaljagadeesha/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+      "-C",
+      "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/RelWithDebInfo/4j2s1b6z/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/nishchaljagadeesha/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+    "-C",
+    "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/RelWithDebInfo/4j2s1b6z/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "faiss-RelWithDebInfo-x86": {
+      "buildCommandComponents": [
+        "/Users/nishchaljagadeesha/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja",
+        "-C",
+        "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/RelWithDebInfo/4j2s1b6z/x86",
+        "faiss"
+      ],
+      "buildType": "release",
+      "abi": "x86",
+      "artifactName": "faiss",
+      "output": "/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/build/intermediates/cxx/RelWithDebInfo/4j2s1b6z/obj/x86/libfaiss.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {},
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}
