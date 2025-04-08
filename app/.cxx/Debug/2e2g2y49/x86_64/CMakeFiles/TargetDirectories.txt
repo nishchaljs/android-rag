@@ -1,3 +1,0 @@
-/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/2e2g2y49/x86_64/CMakeFiles/rebuild_cache.dir
-/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/2e2g2y49/x86_64/CMakeFiles/edit_cache.dir
-/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/2e2g2y49/x86_64/CMakeFiles/faiss.dir

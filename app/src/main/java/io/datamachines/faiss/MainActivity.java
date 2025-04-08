@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
+import java.io.InputStream;
 
 import faiss.R;
 
@@ -58,6 +59,22 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        // In your Activity
+        LlamaCppWrapper llama = new LlamaCppWrapper();
+
+        // Load model from external storage
+        String modelPath = new File(getExternalFilesDir(null), "qwen2.5-0.5b-instruct-q4_k_m.gguf").getAbsolutePath();
+        if (llama.loadModel(modelPath)) {
+            String response = llama.runInference("Explain quantum computing");
+            Log.d("Model response", response);
+            // Update UI with response
+        }
+
+// Always free resources
+        llama.freeModel();
+
+
     }
 
     void runProductQuantizationDemo() {
@@ -115,5 +132,4 @@ public class MainActivity extends AppCompatActivity {
 
     // Native method declaration
     public static native String stringFromJNI(int a, String storage_path);
-
 }

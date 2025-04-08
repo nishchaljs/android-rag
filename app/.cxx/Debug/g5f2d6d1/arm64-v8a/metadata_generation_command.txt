@@ -1,0 +1,25 @@
+                    Executable : /opt/homebrew/bin/cmake
+arguments : 
+-H/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=26
+-DANDROID_PLATFORM=android-26
+-DANDROID_ABI=arm64-v8a
+-DCMAKE_ANDROID_ARCH_ABI=arm64-v8a
+-DANDROID_NDK=/Users/nishchaljagadeesha/Library/Android/sdk/ndk/21.4.7075529
+-DCMAKE_ANDROID_NDK=/Users/nishchaljagadeesha/Library/Android/sdk/ndk/21.4.7075529
+-DCMAKE_TOOLCHAIN_FILE=/Users/nishchaljagadeesha/Library/Android/sdk/ndk/21.4.7075529/build/cmake/android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=/opt/homebrew/bin/ninja
+-DCMAKE_CXX_FLAGS=-std=c++11 -fopenmp
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/build/intermediates/cxx/Debug/g5f2d6d1/obj/arm64-v8a
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/build/intermediates/cxx/Debug/g5f2d6d1/obj/arm64-v8a
+-DCMAKE_BUILD_TYPE=Debug
+-B/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/g5f2d6d1/arm64-v8a
+-GNinja
+-DANDROID_TOOLCHAIN=g++ -DANDROID_STL=c++_static  -DANDROID_PLATFORM=android-14 -GNinja -DCMAKE_MAKE_PROGRAM=/opt/homebrew/bin/ninj
+jvmArgs : 
+
+
+                    Build command args: []
+                    Version: 2

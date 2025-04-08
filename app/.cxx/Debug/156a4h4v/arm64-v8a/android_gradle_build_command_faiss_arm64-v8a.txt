@@ -1,0 +1,7 @@
+Executable : /opt/homebrew/bin/ninja
+arguments : 
+-C
+/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/156a4h4v/arm64-v8a
+faiss
+jvmArgs : 
+

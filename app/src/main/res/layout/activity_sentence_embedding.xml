@@ -45,8 +45,40 @@
             android:layout_weight="1"
             android:text="Compress with PQ"
             android:enabled="false" />
-
     </LinearLayout>
+
+    <Button
+        android:id="@+id/btnUploadPdf"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Upload PDF File"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnUseAllPdfs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Use All PDFs on Device"
+        android:layout_marginBottom="16dp" />
+
+    <EditText
+        android:id="@+id/editTextSearchQuery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minLines="1"
+        android:maxLines="3"
+        android:hint="Enter search query here..."
+        android:layout_marginBottom="16dp"
+        android:inputType="textMultiLine" />
+
+
+    <!-- Button to perform search -->
+    <Button
+        android:id="@+id/btnSearchIndex"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Search Index for Top 5 Results"
+        android:layout_marginBottom="16dp" />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -67,7 +99,6 @@
             android:layout_height="wrap_content"
             android:text="Ready to generate embeddings..."
             android:textIsSelectable="true" />
-
     </ScrollView>
 
 </LinearLayout>

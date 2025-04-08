@@ -1,6 +1,5 @@
 #include <jni.h>
 #include <string>
-
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -12,8 +11,193 @@
 #include "faiss/IndexFlat.h"
 #include "faiss/index_io.h"
 
+#include "llama.cpp/include/llama.h"
+#include "llama.cpp/ggml/include/ggml.h"
+#include "llama.cpp/common/common.h"
+
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
+
 #include "log.h"
 using namespace faiss;
+
+// Global state with thread safety
+struct {
+    llama_model* model;
+    llama_context* ctx;
+    llama_sampler* sampler;
+    std::vector<llama_chat_message> messages;
+    std::mutex mutex;
+} llama_state;
+
+llama_sampler* initialize_sampler() {
+    llama_sampler_chain_params sampler_params = llama_sampler_chain_default_params();
+    sampler_params.no_perf                    = true; // disable performance metrics
+    llama_sampler* sampler = llama_sampler_chain_init(sampler_params);
+    llama_sampler_chain_add(sampler, llama_sampler_init_min_p(0.05f, 1));
+    llama_sampler_chain_add(sampler, llama_sampler_init_temp(0.9));
+    llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+    return sampler;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_io_datamachines_faiss_LlamaCppWrapper_loadModel(JNIEnv* env, jobject, jstring modelPath) {
+    std::lock_guard<std::mutex> lock(llama_state.mutex);
+    const char* path = env->GetStringUTFChars(modelPath, nullptr);
+
+    llama_model_params model_params = llama_model_default_params();
+    model_params.use_mmap           = true;
+    model_params.use_mlock          = false;
+    model_params.vocab_only = false;
+    model_params.kv_overrides = NULL;
+//    model_params.tensor_buft_overrides = NULL;
+
+//    model_params.progress_callback = [](float progress, void*) -> bool {
+//        LOGI("Loading model: %.2f%%", progress * 100);
+//        return true;
+//    };
+
+    llama_model* model = llama_model_load_from_file(path, model_params);
+    llama_state.model = model;
+    env->ReleaseStringUTFChars(modelPath, path);
+
+    if (!llama_state.model) {
+        LOGE("Failed to load model");
+        return JNI_FALSE;
+    }
+
+    llama_context_params ctx_params = llama_context_default_params();
+    ctx_params.n_ctx = 2048;
+
+    llama_context* ctx = llama_init_from_model(llama_state.model, ctx_params);
+    llama_state.ctx = ctx;
+    if (!llama_state.ctx) {
+        LOGE("Failed to create context");
+        llama_model_free(llama_state.model);
+        llama_state.model = nullptr;
+        return JNI_FALSE;
+    }
+
+    llama_sampler* sampler = initialize_sampler();
+    llama_state.sampler = sampler;
+    llama_state.messages.push_back({strdup("system"), strdup("You are a helpful assistant.")});
+    //    llama_sampler_chain_params sampler_params = llama_sampler_chain_default_params();
+//    sampler_params.no_perf = true;
+//    llama_state.sampler = llama_sampler_chain_init(sampler_params);
+//    llama_sampler_chain_add(llama_state.sampler, llama_sampler_init_min_p(0.05f,1));
+//    llama_sampler_chain_add(llama_state.sampler, llama_sampler_init_temp(0.9));
+//    llama_sampler_chain_add(llama_state.sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
+    return JNI_TRUE;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_io_datamachines_faiss_LlamaCppWrapper_runInference(JNIEnv* env, jobject, jstring prompt) {
+    std::lock_guard<std::mutex> lock(llama_state.mutex);
+    if (!llama_state.ctx || !llama_state.model) {
+        return env->NewStringUTF("Model not loaded");
+    }
+
+    const char* input = env->GetStringUTFChars(prompt, nullptr);
+    std::string output;
+    std::vector<char> _formattedMessages = std::vector<char>(llama_n_ctx(llama_state.ctx));
+    llama_state.messages.push_back({strdup("user"), strdup(input)});
+    int newLen = llama_chat_apply_template(NULL, llama_state.messages.data(), llama_state.messages.size(), true,
+                                           _formattedMessages.data(), _formattedMessages.size());
+
+    if (newLen > (int)_formattedMessages.size()) {
+        // resize the output buffer `_formattedMessages`
+        // and re-apply the chat template
+        _formattedMessages.resize(newLen);
+        newLen = llama_chat_apply_template(NULL, llama_state.messages.data(), llama_state.messages.size(), true,
+                                           _formattedMessages.data(), _formattedMessages.size());
+    }
+
+    if (newLen < 0) {
+        throw std::runtime_error("llama_chat_apply_template() in LLMInference::startCompletion() failed");
+    }
+
+    std::string _prompt(_formattedMessages.begin() + 0, _formattedMessages.begin() + newLen);
+
+    llama_batch batch = llama_batch_init(512, 0, 1);
+    auto vocab = llama_model_get_vocab(llama_state.model);
+
+    try {
+        std::vector<llama_token> tokens = common_tokenize(vocab, _prompt, true, true);
+
+        for (size_t i = 0; i < tokens.size(); i++) {
+            batch.token[i] = tokens[i];
+            batch.pos[i] = i;
+            batch.n_seq_id[i] = 1;
+            batch.seq_id[i][0] = 0;
+            batch.logits[i] = (i == tokens.size() - 1);  // only last token requests logits
+        }
+        batch.n_tokens = tokens.size();
+//        int n_seq = 0;
+//        for (size_t i = 0; i < tokens.size(); i++) {
+//            common_batch_add(batch, tokens[i], static_cast<llama_pos>(i), {n_seq}, (i == tokens.size() - 1));
+//        }
+
+        if (llama_decode(llama_state.ctx, batch) != 0) {
+            throw std::runtime_error("Initial decoding failed");
+        }
+
+        if (!llama_state.sampler) {
+            throw std::runtime_error("Sampler is not initialized");
+        }
+
+        int n_past = tokens.size();
+
+        for (int i = 0; ; ++i) {
+            const float* logits = llama_get_logits(llama_state.ctx);
+            if (logits == nullptr) {
+                throw std::runtime_error("Logits are null before sampling");
+            }
+            llama_token new_token = llama_sampler_sample(llama_state.sampler, llama_state.ctx, -1);
+            if (llama_vocab_is_eog(llama_model_get_vocab(llama_state.model), new_token)) {
+                output += "[EOG]";
+                break;
+            }
+
+            std::string piece = common_token_to_piece(llama_state.ctx, new_token, true);
+            //llama_token_to_piece(vocab, new_token, token_piece, sizeof(token_piece), 1, false);
+            output += std::string(piece);
+
+            common_batch_clear(batch); // Reset batch
+            batch.token[0] = new_token;
+            batch.pos[0] = n_past;
+            batch.seq_id[0][0] = 0;
+            batch.n_seq_id[0] = 1;
+            batch.logits[0] = true;
+            batch.n_tokens = 1;
+
+            if (llama_decode(llama_state.ctx, batch) != 0) {
+                throw std::runtime_error("Decoding failed");
+            }
+
+            n_past+=1;
+        }
+    } catch (const std::exception& e) {
+        output = "Error: " + std::string(e.what());
+    }
+
+    llama_batch_free(batch);
+    env->ReleaseStringUTFChars(prompt, input);
+    return env->NewStringUTF(output.c_str());
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_io_datamachines_faiss_LlamaCppWrapper_freeModel(JNIEnv*, jobject) {
+    std::lock_guard<std::mutex> lock(llama_state.mutex);
+    if (llama_state.ctx) {
+        llama_free(llama_state.ctx);
+        llama_state.ctx = nullptr;
+    }
+    if (llama_state.model) {
+        llama_model_free(llama_state.model);
+        llama_state.model = nullptr;
+    }
+}
+
 
 int64_t getCurrentMillTime() {
     struct timeval tv;
@@ -28,6 +212,20 @@ void generateRandomVectors(float* vectors, int numVectors, int dimension) {
 
     for (int i = 0; i < numVectors * dimension; i++) {
         vectors[i] = dis(gen);
+    }
+}
+
+// Function to randomly sample training vectors
+void sampleTrainingVectors(float* allEmbeddings, int numEmbeddings, int dimension, float* trainingVectors, int numTrainingVectors) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, numEmbeddings - 1);
+
+    for (int i = 0; i < numTrainingVectors; i++) {
+        int randomIndex = dis(gen);
+        for (int j = 0; j < dimension; j++) {
+            trainingVectors[i * dimension + j] = allEmbeddings[randomIndex * dimension + j];
+        }
     }
 }
 
@@ -252,6 +450,166 @@ Java_io_datamachines_faiss_SentenceEmbeddingActivity_compressEmbeddingWithPQ(
     return env->NewStringUTF(result.c_str());
 }
 
+extern "C" JNIEXPORT jstring JNICALL
+Java_io_datamachines_faiss_SentenceEmbeddingActivity_compressEmbeddingsWithPQ(
+        JNIEnv *env, jobject thiz, jobjectArray embeddings,
+        jint numTrainingVectors, jstring storage_path) {
+
+    std::string result = "";
+    const char *cPath = env->GetStringUTFChars(storage_path, nullptr);
+    std::string index_path = std::string(cPath) + "/embeddings_pq.index";
+    env->ReleaseStringUTFChars(storage_path, cPath);
+
+    // Get the number of embeddings and their dimension
+    jsize numEmbeddings = env->GetArrayLength(embeddings);
+    jfloatArray firstEmbedding = (jfloatArray) env->GetObjectArrayElement(embeddings, 0);
+    jsize dimension = env->GetArrayLength(firstEmbedding);
+
+    LOGI("Received %d embeddings with dimension %d", numEmbeddings, dimension);
+
+    // Allocate memory for all embeddings
+    float* allEmbeddings = new float[numEmbeddings * dimension];
+    for (int i = 0; i < numEmbeddings; i++) {
+        jfloatArray embedding = (jfloatArray) env->GetObjectArrayElement(embeddings, i);
+        jfloat* embeddingData = env->GetFloatArrayElements(embedding, nullptr);
+
+        for (int j = 0; j < dimension; j++) {
+            allEmbeddings[i * dimension + j] = embeddingData[j];
+        }
+
+        env->ReleaseFloatArrayElements(embedding, embeddingData, JNI_ABORT);
+    }
+
+    // === Create the PQ index ===
+    const int numSubvectors = 64;   // Number of subquantizers (m)
+    const int bitsPerSubvector = 8; // Bits per subquantizer (8 bits = 256 centroids per subvector)
+    LOGI("Creating Product Quantization index (d=%d, m=%d, bits=%d)",
+         dimension, numSubvectors, bitsPerSubvector);
+    faiss::IndexPQ* index = new faiss::IndexPQ(dimension, numSubvectors, bitsPerSubvector);
+
+    // === Train the PQ index ===
+    LOGI("Training PQ index with %d vectors...", numTrainingVectors);
+    float* trainingVectors = new float[numTrainingVectors * dimension];
+    sampleTrainingVectors(allEmbeddings, numEmbeddings, dimension, trainingVectors, numTrainingVectors);
+
+    int64_t startTime = getCurrentMillTime();
+    index->train(numTrainingVectors, trainingVectors);
+    int64_t endTime = getCurrentMillTime();
+    LOGI("Training completed in %lld ms", endTime - startTime);
+
+    delete[] trainingVectors;
+
+    // === Add all embeddings to the index ===
+    LOGI("Adding %d embeddings to the index...", numEmbeddings);
+    startTime = getCurrentMillTime();
+    index->add(numEmbeddings, allEmbeddings);
+    endTime = getCurrentMillTime();
+    LOGI("Added %lld vectors in %lld ms", index->ntotal, endTime - startTime);
+
+    delete[] allEmbeddings;
+
+    // === Save the index ===
+    LOGI("Saving index to %s", index_path.c_str());
+    startTime = getCurrentMillTime();
+    faiss::write_index(index, index_path.c_str());
+    endTime = getCurrentMillTime();
+    LOGI("Index saved in %lld ms", endTime - startTime);
+
+    // Memory usage calculation
+    float originalMemoryMB = (float)(index->ntotal * dimension * sizeof(float)) / (1024 * 1024);
+    float compressedMemoryMB = (float)(index->ntotal * numSubvectors) / (1024 * 1024);
+    float compressionRatio = originalMemoryMB / compressedMemoryMB;
+
+    LOGI("Memory usage:");
+    LOGI("  Original: %.2f MB", originalMemoryMB);
+    LOGI("  Compressed: %.2f MB", compressedMemoryMB);
+    LOGI("  Compression ratio: %.2f:1", compressionRatio);
+
+    // Prepare result string
+    result += "Compression Results:\n";
+    result += "- Vectors: " + std::to_string(index->ntotal) + "\n";
+    result += "- Dimension: " + std::to_string(dimension) + "\n";
+    result += "- Original size: " + std::to_string(originalMemoryMB) + " MB\n";
+    result += "- Compressed size: " + std::to_string(compressedMemoryMB) + " MB\n";
+    result += "- Compression ratio: " + std::to_string(compressionRatio) + ":1\n";
+
+    delete index;
+
+    return env->NewStringUTF(result.c_str());
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_io_datamachines_faiss_SentenceEmbeddingActivity_searchIndexNative(
+        JNIEnv *env, jobject thiz, jfloatArray query_embedding, jint top_k, jstring index_path) {
+
+    // Convert Java string to C++ string
+    const char *cIndexPath = env->GetStringUTFChars(index_path, nullptr);
+    std::string indexPath(cIndexPath);
+    env->ReleaseStringUTFChars(index_path, cIndexPath);
+
+    // Get the query embedding from Java
+    jsize dimension = env->GetArrayLength(query_embedding);
+    jfloat *queryEmbedding = env->GetFloatArrayElements(query_embedding, nullptr);
+
+    // Load the Faiss index from the file
+    LOGI("Loading index from %s", indexPath.c_str());
+    faiss::Index *index = nullptr;
+    try {
+        index = faiss::read_index(indexPath.c_str());
+    } catch (const std::exception &e) {
+        LOGE("Failed to load index: %s", e.what());
+        env->ReleaseFloatArrayElements(query_embedding, queryEmbedding, JNI_ABORT);
+        return env->NewStringUTF("Error: Failed to load index.");
+    }
+
+    if (!index) {
+        LOGE("Index is null after loading.");
+        env->ReleaseFloatArrayElements(query_embedding, queryEmbedding, JNI_ABORT);
+        return env->NewStringUTF("Error: Index is null.");
+    }
+
+    // Prepare for search
+    LOGI("Performing search with top_k=%d", top_k);
+    float *distances = new float[top_k];
+    int64_t *indices = new int64_t[top_k];
+
+    try {
+        // Perform the search
+        index->search(1, queryEmbedding, top_k, distances, indices);
+
+        // Build the result string
+        std::string resultJson;
+        resultJson += "[";
+        std::string result = "Search Results:\n";
+        for (int i = 0; i < top_k; i++) {
+            result += "Rank " + std::to_string(i + 1) + ": ";
+            result += "ID=" + std::to_string(indices[i]) + ", ";
+            result += "Distance=" + std::to_string(distances[i]) + "\n";
+            resultJson += std::to_string(indices[i]);
+            if (i < top_k - 1) resultJson += ",";
+        }
+        resultJson += "]";
+
+        // Clean up and return results
+        delete[] distances;
+        delete[] indices;
+        env->ReleaseFloatArrayElements(query_embedding, queryEmbedding, JNI_ABORT);
+        delete index;
+
+        return env->NewStringUTF(resultJson.c_str());
+
+    } catch (const std::exception &e) {
+        LOGE("Search failed: %s", e.what());
+        delete[] distances;
+        delete[] indices;
+        env->ReleaseFloatArrayElements(query_embedding, queryEmbedding, JNI_ABORT);
+        delete index;
+
+        return env->NewStringUTF("Error: Search failed.");
+    }
+}
+
+
 
 #define JNIREG_CLASS_BASE "io/datamachines/faiss/MainActivity"
 static JNINativeMethod gMethods_Base[] = {
@@ -259,8 +617,15 @@ static JNINativeMethod gMethods_Base[] = {
 };
 
 static JNINativeMethod gMethods_SentenceEmbedding[] = {
-        {"compressEmbeddingWithPQ", "([FLjava/lang/String;)Ljava/lang/String;",
+        {"compressEmbeddingsWithPQ",
+         "([[FILjava/lang/String;)Ljava/lang/String;",
+         (void *) Java_io_datamachines_faiss_SentenceEmbeddingActivity_compressEmbeddingsWithPQ},
+        {"compressEmbeddingWithPQ",
+         "([FLjava/lang/String;)Ljava/lang/String;",
          (void *) Java_io_datamachines_faiss_SentenceEmbeddingActivity_compressEmbeddingWithPQ},
+        {"searchIndexNative",
+                "([FILjava/lang/String;)Ljava/lang/String;",
+                (void *) Java_io_datamachines_faiss_SentenceEmbeddingActivity_searchIndexNative}
 };
 
 static int registerNativeMethods(JNIEnv *env, const char *className,

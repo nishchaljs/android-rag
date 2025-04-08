@@ -7,6 +7,7 @@ android {
         applicationId "io.datamachines.faiss"
         minSdkVersion 26
         targetSdkVersion 28
+        ndkVersion "25.1.8937393"
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
@@ -14,7 +15,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11 -fopenmp"
-                arguments "-DANDROID_TOOLCHAIN=g++ -DANDROID_STL=c++_static  -DANDROID_PLATFORM=android-14"
+                arguments "-DANDROID_TOOLCHAIN=g++ -DANDROID_STL=c++_static  -DANDROID_PLATFORM=android-14 -GNinja -DCMAKE_MAKE_PROGRAM=/opt/homebrew/bin/ninj"
                 targets 'faiss'
             }
         }
@@ -39,6 +40,11 @@ android {
     externalNativeBuild {
         cmake {
             path "src/main/cpp/source/CMakeLists.txt"
+            version "3.18.1+"  // Use a different version
+
+            // Specify to use ninja explicitly if needed
+//            arguments "-GNinja",
+//                    "-DCMAKE_MAKE_PROGRAM=/opt/homebrew/bin/ninja"
         }
     }
     android {
@@ -48,6 +54,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+
+    aaptOptions {
+        noCompress "gguf" // Disable compression for .gguf files
     }
 
 }
@@ -66,6 +76,11 @@ makejni.dependsOn(build)
 
 
 dependencies {
+    implementation 'com.tom-roush:pdfbox-android:2.0.27.0'
+
+    implementation 'com.google.code.gson:gson:2.8.9'
+
+
     implementation 'androidx.multidex:multidex:2.0.1'
     //implementation "androidx.appcompat:appcompat:1.7.0"
     implementation "androidx.appcompat:appcompat:1.6.1"

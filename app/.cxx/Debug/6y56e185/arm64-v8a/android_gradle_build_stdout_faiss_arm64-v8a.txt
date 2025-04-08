@@ -1,0 +1,24 @@
+ninja: Entering directory `/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/6y56e185/arm64-v8a'
+[1/241] Building C object llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+FAILED: llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o 
+/Users/nishchaljagadeesha/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang --target=aarch64-none-linux-android26 --gcc-toolchain=/Users/nishchaljagadeesha/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64 --sysroot=/Users/nishchaljagadeesha/Library/Android/sdk/ndk/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -DANDROID_BIT32 -DGGML_BACKEND_BUILD -DGGML_BACKEND_SHARED -DGGML_SCHED_MAX_COPIES=4 -DGGML_SHARED -DGGML_USE_CPU_AARCH64 -DGGML_USE_LLAMAFILE -DGGML_USE_OPENMP -DNDEBUG -D_GNU_SOURCE -D_XOPEN_SOURCE=600 -Dggml_cpu_EXPORTS -I/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/llama.cpp/ggml/src/.. -I/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/llama.cpp/ggml/src/. -I/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/llama.cpp/ggml/src/ggml-cpu -I/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/llama.cpp/ggml/src/../include -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O0  -std=gnu11 -fPIC   -w -Wshadow -Wstrict-prototypes -Wpointer-arith -Wmissing-prototypes -Werror=implicit-int -Werror=implicit-function-declaration -Wall -Wextra -Wpedantic -Wcast-qual -Wno-unused-function -Wunreachable-code-break -Wunreachable-code-return -Wdouble-promotion -fopenmp=libomp -MD -MT llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o -MF llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o.d -o llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o -c /Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/llama.cpp/ggml/src/ggml-cpu/ggml-cpu.c
+/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/llama.cpp/ggml/src/ggml-cpu/ggml-cpu.c:2619:53: error: use of undeclared identifier 'HWCAP_ASIMD'
+    ggml_arm_arch_features.has_neon    = !!(hwcap & HWCAP_ASIMD);
+                                                    ^
+/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/llama.cpp/ggml/src/ggml-cpu/ggml-cpu.c:2620:53: error: use of undeclared identifier 'HWCAP_ASIMDDP'
+    ggml_arm_arch_features.has_dotprod = !!(hwcap & HWCAP_ASIMDDP);
+                                                    ^
+/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/src/main/cpp/source/llama.cpp/ggml/src/ggml-cpu/ggml-cpu.c:2622:53: error: use of undeclared identifier 'HWCAP_SVE'
+    ggml_arm_arch_features.has_sve     = !!(hwcap & HWCAP_SVE);
+                                                    ^
+3 errors generated.
+[2/241] Building C object llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[3/241] Building CXX object llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[4/241] Building C object llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[5/241] Building C object llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[6/241] Building CXX object llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[7/241] Building CXX object llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[8/241] Building CXX object llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu-aarch64.cpp.o
+[9/241] Building CXX object llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[10/241] Building CXX object llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+ninja: build stopped: subcommand failed.

@@ -1,0 +1,10 @@
+# ninja log v6
+7	765	1743634289817612586	llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o	f98dced4a770df82
+8	986	1743634289818635830	llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o	aa0b85378760150d
+6	994	1743634289817072881	llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o	575b98f0f3cb789b
+9	1040	1743634289819371242	llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o	916ca22fd94977c
+10	1088	1743634289821159898	llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o	7ec2cba68109c7f
+7	1088	1743634289817970292	llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o	5e045154011d20ec
+12	1123	1743634289822496099	llama_cpp_build/ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu-aarch64.cpp.o	22b50d2446e80b43
+7	1287	1743634289818287123	llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o	c364b24c304a644a
+9	1700	1743634289819866614	llama_cpp_build/ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o	fc193ec2b88bbd9b

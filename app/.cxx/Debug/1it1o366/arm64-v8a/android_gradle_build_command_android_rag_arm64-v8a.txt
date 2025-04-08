@@ -1,7 +1,0 @@
-Executable : /Users/nishchaljagadeesha/Library/Android/sdk/cmake/3.10.2.4988404/bin/ninja
-arguments : 
--C
-/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/1it1o366/arm64-v8a
-faiss
-jvmArgs : 
-

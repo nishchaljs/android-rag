@@ -1,2 +1,0 @@
-ninja: Entering directory `/Users/nishchaljagadeesha/StudioProjects/android-faiss/app/.cxx/Debug/6r694q5d/arm64-v8a'
-ninja: no work to do.
